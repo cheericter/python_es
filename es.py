@@ -1,15 +1,18 @@
 from elasticsearch import Elasticsearch
 from elasticsearch import ConnectionError
 from elasticsearch import NotFoundError
+from elasticsearch.helpers import BulkIndexError
 import codecs
 from functools import partial
 import sys
 from elasticsearch import helpers
+import random
 
 
 def insert_id_score(infile):
     es = Elasticsearch(["localhost:9200"])
     with codecs.open(infile, 'r', 'utf-8') as infp:
+        cnt=0
         for line in infp:
             if not line.strip():
                 continue
@@ -20,6 +23,8 @@ def insert_id_score(infile):
             score = {}
             score['raw_cscore'] = raw_cscore
             score['cscore'] = cscore
+            cnt += 1
+            score['time'] = cnt
             es.create(index=indexname, doc_type=typename, id=poiid, body=score)
 
 
@@ -48,15 +53,17 @@ def updatefile(infile):
 
 
 def infoparse(line):
-    print line
+    #print line
     row = line.strip().split('\t')
-    raw_cscore = int10(row[1])
-    cscore = float(row[2])
+    raw_cscore = 1#int10(row[0])
+    cscore = 1.0#float(row[1])
     score = {}
     score['raw_cscore'] = raw_cscore
     score['cscore'] = cscore
-    print score
+    score['bulkcnt'] = 'test'
+    #print scores
     return score
+
 def batch_update(infile, num, indexname, typename):
     try:
         es = Elasticsearch(['localhost:9200'])
@@ -67,6 +74,8 @@ def batch_update(infile, num, indexname, typename):
                     continue
                 row = line.strip().split('\t', 1)
                 poiid = row[0]
+                if random.random()>0.9:
+                    poiid += '**'
                 doc = infoparse(row[1])
                 info = {}
                 info['_op_type'] = 'update'
@@ -76,8 +85,11 @@ def batch_update(infile, num, indexname, typename):
                 info['doc'] = doc
                 infos.append(info)
                 if len(infos) == num:
-                    helpers.bulk(es, infos)
-                    del infos[0:len(infos)]
+                    try:
+                        helpers.bulk(es, infos)
+                        del infos[0:len(infos)]
+                    except BulkIndexError as e:
+                        pass
     except NotFoundError:
         print 'not exist'
     except ConnectionError:
