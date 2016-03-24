@@ -55,14 +55,15 @@ def updatefile(infile):
 def infoparse(line):
     #print line
     row = line.strip().split('\t')
-    raw_cscore = 12#int10(row[0])
-    cscore = 2.0#float(row[1])
+    raw_cscore = int10(row[0])
+    cscore = float(row[1])
     score = {}
     score['raw_cscore'] = raw_cscore
     score['cscore'] = cscore
     #score['bulkcnt'] = 'test'
     #print scores
     return score
+
 
 def batch_update(infile, num, indexname, typename):
     try:
@@ -74,7 +75,8 @@ def batch_update(infile, num, indexname, typename):
                     continue
                 row = line.strip().split('\t', 1)
                 poiid = row[0]
-                if random.random()>0.9:
+                if random.random() > 0.999:
+                    print infos
                     print poiid
                     poiid += '**'
                 doc = infoparse(row[1])
@@ -87,9 +89,11 @@ def batch_update(infile, num, indexname, typename):
                 infos.append(info)
                 if len(infos) == num:
                     try:
-                        helpers.bulk(es, infos)
+                        msg = helpers.bulk(es, infos)
                         del infos[0:len(infos)]
                     except BulkIndexError as e:
+                        print e
+                        print msg
                         pass
     except NotFoundError:
         print 'not exist'
