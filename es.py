@@ -48,12 +48,14 @@ def updatefile(infile):
 
 
 def infoparse(line):
+    print line
     row = line.strip()
     raw_cscore = int10(row[1])
     cscore = float(row[2])
     score = {}
     score['raw_cscore'] = raw_cscore
     score['cscore'] = cscore
+    print score
     return score
 def batch_update(infile, num, indexname, typename):
     try:
