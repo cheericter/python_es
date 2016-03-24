@@ -47,7 +47,7 @@ def updatefile(infile):
         raise e
 
 
-def batch_update(infile, num):
+def batch_update(infile, num, indexname, typename):
     try:
         es = Elasticsearch(['localhost:9200'])
         with codecs.open(infile, 'r', 'utf-8') as infp:
@@ -87,5 +87,4 @@ if __name__ == "__main__":
     typename = "didi_score"
     int10 = partial(int, base=10)
     insert_id_score(infile)
-    #updatefile(infile)
-
+    batch_update(infile, 500, indexname, typename)
