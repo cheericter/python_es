@@ -49,7 +49,7 @@ def updatefile(infile):
 
 def infoparse(line):
     print line
-    row = line.strip()
+    row = line.strip().split('\t')
     raw_cscore = int10(row[1])
     cscore = float(row[2])
     score = {}
