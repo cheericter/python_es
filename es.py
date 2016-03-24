@@ -28,7 +28,7 @@ def updatefile(infile):
     body = {}
     score = {}
     score['raw_cscore'] = 1
-    score['cscore'] =1.000
+    score['cscore'] = 1.000
     body["doc"] = score
     print body
     try:
@@ -47,6 +47,14 @@ def updatefile(infile):
         raise e
 
 
+def infoparse(line):
+    row = line.strip()
+    raw_cscore = int10(row[1])
+    cscore = float(row[2])
+    score = {}
+    score['raw_cscore'] = raw_cscore
+    score['cscore'] = cscore
+    return score
 def batch_update(infile, num, indexname, typename):
     try:
         es = Elasticsearch(['localhost:9200'])
@@ -55,19 +63,15 @@ def batch_update(infile, num, indexname, typename):
             for line in infp:
                 if not line.strip():
                     continue
-                row = line.strip().split('\t')
+                row = line.strip().split('\t', 1)
                 poiid = row[0]
-                raw_cscore = 1#int10(row[1])
-                cscore = 1.0#float(row[2])
+                doc = infoparse(row[1])
                 info = {}
-                score = {}
-                score['raw_cscore'] = raw_cscore
-                score['cscore'] = cscore
                 info['_op_type'] = 'update'
                 info['_index'] = indexname
                 info['_type'] = typename
                 info['_id'] = poiid
-                info['doc'] = score
+                info['doc'] = doc
                 infos.append(info)
                 if len(infos) == num:
                     helpers.bulk(es, infos)
@@ -75,7 +79,7 @@ def batch_update(infile, num, indexname, typename):
     except NotFoundError:
         print 'not exist'
     except ConnectionError:
-        print 'ConnectionError'
+        print 'ConnectionError \n exit \n'
         exit(-1)
     except Exception as e:
         print 'sth wrong'
@@ -86,5 +90,5 @@ if __name__ == "__main__":
     indexname = "didi_poi_v1"
     typename = "didi_score"
     int10 = partial(int, base=10)
-    insert_id_score(infile)
+    #insert_id_score(infile)
     batch_update(infile, 500, indexname, typename)
